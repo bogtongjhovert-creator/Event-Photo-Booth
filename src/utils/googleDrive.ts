@@ -131,6 +131,29 @@ export async function uploadPhotostripToDrive(
   
   const fileData = await res.json();
   
+  // Create permission: anyone with the link can view (reader)
+  // This resolves the 404/Access Denied error when guests scan the QR code to open the Google Drive file preview.
+  try {
+    const permissionRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}/permissions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        role: 'reader',
+        type: 'anyone'
+      })
+    });
+    if (!permissionRes.ok) {
+      console.warn(`[DRIVE-PERMISSIONS] Failed to create 'anyone-reader' permission on file ${fileData.id}:`, await permissionRes.text());
+    } else {
+      console.log(`[DRIVE-PERMISSIONS] Successfully shared file ${fileData.id} with 'anyone' (reader).`);
+    }
+  } catch (err) {
+    console.error(`[DRIVE-PERMISSIONS] Error sharing file ${fileData.id}:`, err);
+  }
+  
   // Optionally, get more metadata including webViewLink so we can link directly to it!
   try {
     const metaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileData.id}?fields=webViewLink,webContentLink`, {
