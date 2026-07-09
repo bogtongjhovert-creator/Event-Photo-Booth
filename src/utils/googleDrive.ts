@@ -2,9 +2,50 @@
  * Google Drive API Helpers for uploading photostrips.
  */
 
-export async function getOrCreateFolder(accessToken: string, folderName: string): Promise<string> {
-  // Query for the folder
-  const query = encodeURIComponent(`mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`);
+export async function getOrCreateFolder(accessToken: string, folderNameOrUrl: string): Promise<string> {
+  const trimmed = folderNameOrUrl.trim();
+  let folderId = '';
+
+  // Match Google Drive folder link pattern: /folders/ID or ?id=ID
+  const foldersRegex = /\/folders\/([a-zA-Z0-9-_]{20,100})/;
+  const idParamRegex = /[?&]id=([a-zA-Z0-9-_]{20,100})/;
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    const foldersMatch = trimmed.match(foldersRegex);
+    const idParamMatch = trimmed.match(idParamRegex);
+    if (foldersMatch && foldersMatch[1]) {
+      folderId = foldersMatch[1];
+    } else if (idParamMatch && idParamMatch[1]) {
+      folderId = idParamMatch[1];
+    }
+  } else if (/^[a-zA-Z0-9-_]{20,100}$/.test(trimmed)) {
+    // If it is just the raw Google Drive folder ID
+    folderId = trimmed;
+  }
+
+  if (folderId) {
+    console.log(`[DRIVE] Detected explicit Folder ID: ${folderId}`);
+    try {
+      // Validate that the folder exists and is accessible
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,mimeType`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(`[DRIVE] Folder validated successfully: "${data.name}"`);
+        return folderId;
+      } else {
+        console.warn(`[DRIVE] Folder validation status code: ${res.status}. Falling back to using ID directly.`);
+        return folderId;
+      }
+    } catch (err) {
+      console.error('[DRIVE] Error validating folder ID, using directly anyway:', err);
+      return folderId;
+    }
+  }
+
+  // Query for the folder by name if no explicit ID/link was detected
+  const query = encodeURIComponent(`mimeType='application/vnd.google-apps.folder' and name='${trimmed}' and trashed=false`);
   const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
@@ -26,7 +67,7 @@ export async function getOrCreateFolder(accessToken: string, folderName: string)
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      name: folderName,
+      name: trimmed,
       mimeType: 'application/vnd.google-apps.folder'
     })
   });

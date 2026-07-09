@@ -1041,10 +1041,10 @@ export default function AdminDashboard({
                       </div>
 
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs text-slate-300 font-bold">Workspace Destination Folder Name</label>
+                        <label className="text-xs text-slate-300 font-bold">Google Drive Folder Link or Folder Name</label>
                         <input
                           type="text"
-                          placeholder="e.g. Photobooth Kiosk Photos"
+                          placeholder="Paste folder link (e.g. https://drive.google.com/drive/folders/...) or type folder name"
                           value={settings.driveConfig?.folderName || ''}
                           disabled={!settings.driveConfig?.connectedEmail}
                           onChange={(e) => {
@@ -1060,7 +1060,7 @@ export default function AdminDashboard({
                           className="px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-blue-500/50 disabled:opacity-40"
                         />
                         <span className="text-[10px] text-slate-500 leading-normal">
-                          This folder will be searched or created inside your Google Drive. All photos are saved natively as lossless PNG images inside it.
+                          You can paste your shared Google Drive folder link, folder ID, or type a custom name. When a link is detected, we will extract the folder ID automatically and upload photostrips directly inside it.
                         </span>
                       </div>
                     </div>

@@ -329,7 +329,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   customSharingUrl: '',
   driveConfig: {
     enabled: false,
-    folderName: 'Photobooth Kiosk Photos',
+    folderName: 'https://drive.google.com/drive/folders/1sssc9TkaI3XlgdNvk3ImhBfYHXJyYzV0?usp=sharing',
     connectedEmail: '',
     connectedName: '',
     accessToken: null,
